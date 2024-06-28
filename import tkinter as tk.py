@@ -19,6 +19,10 @@ class JuegoDeRanas:
         
         start_button = tk.Button(self.root, text="Iniciar Juego", font=('Arial', 18), command=self.start_game)
         start_button.pack(pady=20)
+    
+    def clear_window(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
     def start_game(self):
         self.clear_window()
@@ -26,14 +30,10 @@ class JuegoDeRanas:
         self.setup_game_ui()
         self.root.after(1000, self.actualizar_tiempo)
 
-    def clear_window(self):
-        for widget in self.root.winfo_children():
-            widget.destroy()
-
     def init_game_variables(self):
-        self.turno = "verde"
         self.estado = ['m', 'm', 'm', ' ', 'v', 'v', 'v']  # 'm' para marrón, 'v' para verde, ' ' para piedra vacía
         self.tiempo = 0
+        self.tiempo_movimiento = 60
         self.start_time = time.time()
 
     def setup_game_ui(self):
@@ -49,25 +49,33 @@ class JuegoDeRanas:
         
         self.actualizar_botones()
         
-        self.label_tiempo = tk.Label(self.root, text=f"Tiempo: {self.tiempo}s", font=('Arial', 18))
-        self.label_tiempo.grid(row=2, column=0, columnspan=7)
+        self.label_tiempo = tk.Label(self.root, text=f"Tiempo total: {self.tiempo}s", font=('Arial', 18))
+        self.label_tiempo.grid(row=2, column=0, columnspan=4)
+
+        self.label_tiempo_movimiento = tk.Label(self.root, text=f"Tiempo de movimiento: {self.tiempo_movimiento}s", font=('Arial', 18))
+        self.label_tiempo_movimiento.grid(row=2, column=4, columnspan=3)
         
-        self.menu = tk.Menu(self.root)
-        self.root.config(menu=self.menu)
-        
-        self.game_menu = tk.Menu(self.menu, tearoff=0)
-        self.menu.add_cascade(label="Juego", menu=self.game_menu)
-        self.game_menu.add_command(label="Reiniciar", command=self.reset_game)
-        self.game_menu.add_command(label="Salir", command=self.root.quit)
+        self.reiniciar_button = tk.Button(self.root, text="Reiniciar Juego", font=('Arial', 18), command=self.reset_game)
+        self.reiniciar_button.grid(row=3, column=2, columnspan=2)
+
+        self.salir_button = tk.Button(self.root, text="Salir", font=('Arial', 18), command=self.root.quit)
+        self.salir_button.grid(row=3, column=4, columnspan=2)
 
     def actualizar_tiempo(self):
         self.tiempo += 1
-        self.label_tiempo.config(text=f"Tiempo: {self.tiempo}s")
+        self.tiempo_movimiento -= 1
+        self.label_tiempo.config(text=f"Tiempo total: {self.tiempo}s")
+        self.label_tiempo_movimiento.config(text=f"Tiempo de movimiento: {self.tiempo_movimiento}s")
+
+        if self.tiempo_movimiento == 0:
+            messagebox.showinfo("Tiempo agotado", "El tiempo para mover una rana se ha agotado.")
+            self.reset_game()
+
         self.root.after(1000, self.actualizar_tiempo)
     
     def actualizar_botones(self):
         self.canvas.delete("all")
-        colores = {'m': 'brown', 'v': 'green', ' ': 'lightgrey'}
+        colores = {'m': 'saddlebrown', 'v': 'green', ' ': 'lightgrey'}
         for i in range(7):
             if self.estado[i] == 'm':
                 self.canvas.create_oval(i * 100 + 10, 10, i * 100 + 90, 90, fill='saddlebrown')
@@ -77,20 +85,22 @@ class JuegoDeRanas:
                 self.canvas.create_oval(i * 100 + 10, 10, i * 100 + 90, 90, fill='lightgrey')
     
     def mover_rana(self, i):
-        if self.turno == "verde" and self.estado[i] == 'v':
+        print(f"Intentando mover la rana en la posición {i}. Estado actual: {self.estado}")
+        if self.estado[i] == 'v':
             if i - 1 >= 0 and self.estado[i - 1] == ' ':
+                print(f"Moviendo la rana verde de {i} a {i-1}")
                 self.estado[i], self.estado[i - 1] = self.estado[i - 1], self.estado[i]
-                self.turno = "marrón"
-            elif i - 2 >= 0 and self.estado[i - 2] == ' ' and self.estado[i - 1] == 'm':
+            elif i - 2 >= 0 and self.estado[i - 2] == ' ' and self.estado[i - 1] in ('m', 'v'):
+                print(f"Saltando la rana verde de {i} a {i-2}")
                 self.estado[i], self.estado[i - 2] = self.estado[i - 2], self.estado[i]
-                self.turno = "marrón"
-        elif self.turno == "marrón" and self.estado[i] == 'm':
+        elif self.estado[i] == 'm':
             if i + 1 < 7 and self.estado[i + 1] == ' ':
+                print(f"Moviendo la rana marrón de {i} a {i+1}")
                 self.estado[i], self.estado[i + 1] = self.estado[i + 1], self.estado[i]
-                self.turno = "verde"
-            elif i + 2 < 7 and self.estado[i + 2] == ' ' and self.estado[i + 1] == 'v':
+            elif i + 2 < 7 and self.estado[i + 2] == ' ' and self.estado[i + 1] in ('m', 'v'):
+                print(f"Saltando la rana marrón de {i} a {i+2}")
                 self.estado[i], self.estado[i + 2] = self.estado[i + 2], self.estado[i]
-                self.turno = "verde"
+        self.tiempo_movimiento = 60
         self.actualizar_botones()
         self.verificar_ganador()
     
