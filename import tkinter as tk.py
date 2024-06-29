@@ -85,20 +85,15 @@ class JuegoDeRanas:
                 self.canvas.create_oval(i * 100 + 10, 10, i * 100 + 90, 90, fill='lightgrey')
     
     def mover_rana(self, i):
-        print(f"Intentando mover la rana en la posición {i}. Estado actual: {self.estado}")
         if self.estado[i] == 'v':
             if i - 1 >= 0 and self.estado[i - 1] == ' ':
-                print(f"Moviendo la rana verde de {i} a {i-1}")
                 self.estado[i], self.estado[i - 1] = self.estado[i - 1], self.estado[i]
             elif i - 2 >= 0 and self.estado[i - 2] == ' ' and self.estado[i - 1] in ('m', 'v'):
-                print(f"Saltando la rana verde de {i} a {i-2}")
                 self.estado[i], self.estado[i - 2] = self.estado[i - 2], self.estado[i]
         elif self.estado[i] == 'm':
             if i + 1 < 7 and self.estado[i + 1] == ' ':
-                print(f"Moviendo la rana marrón de {i} a {i+1}")
                 self.estado[i], self.estado[i + 1] = self.estado[i + 1], self.estado[i]
             elif i + 2 < 7 and self.estado[i + 2] == ' ' and self.estado[i + 1] in ('m', 'v'):
-                print(f"Saltando la rana marrón de {i} a {i+2}")
                 self.estado[i], self.estado[i + 2] = self.estado[i + 2], self.estado[i]
         self.tiempo_movimiento = 60
         self.actualizar_botones()
